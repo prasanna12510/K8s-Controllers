@@ -1,0 +1,27 @@
+Algorithm:
+Scheduling(cron job runs once per hour):
+1.A replication controller/deployment is created by client at federated level.
+2.deployments are spread evenly across 3 clusters.
+3.generate load on federated ingress to trigger the prometheus and store the custom metrics.
+4.count the http request in each cluster individually For example:
+USA Cluster: 100 requests 
+Mumbai Cluster: 200 requests 
+Singapore Cluster: 300 requests
+5. calculate the optimal value count for each individual cluster For example:
+100+200+300=600
+100/600=0.16 , 200/600=0.33 , 300/600=0.5()
+6.Consider the cluster with maximum optimal value and place the replicas in that specific cluster (this will be the maximum budget allocated to each cluster)
+
+Algorithm:
+Scaling(runs as pod continously and monitors the metrics of an application):
+1.specify the max replicas to be scaled in the autoscaling configuration with respect to the max budget allocated per cluster and the threshold value 
+2.Monitors the target pod metrics and updates the fields like desired replicas(based on metrics) and current replicas(based on current status of in cluster pods)
+2.scale up the replicas if load reaches the threshold value
+3.scale down after finishing load testing to its initial replicas
+
+Exception:
+If the desired and current replicas the same as the max replicas and the Http request count still higher than the target http request count, then the target app in this cluster needs more replicas and scaling is currently restricted by max replicas set on this replica object.
+In such scenario,scheduling controller scans all clusters and tries to find clusters which do not have such condition(i.e. desired replicas are less than max, and current http request count is lower than the threshold).
+
+If it finds such a cluster, it reduces the max replica on the autoscaler in this cluster and increases the max replicas on the autoscalar in the cluster which needed the replicas.
+
